@@ -2,17 +2,23 @@ console.log(window.myAPI)
 
 const setButton = document.getElementById('btn')
 const titleInput = document.getElementById('title')
+const fileBtn = document.getElementById('fileBtn')
+const filePathElement = document.getElementById('filePath')
+const counter = document.getElementById('counter')
+
 setButton.addEventListener('click', () => {
     const title = titleInput.value
-    // window.electronAPI.setTitle(title)
+    window.electronAPI.setTitle(title)
     setButton.style.backgroundColor = 'pink'
-
 });
 
+fileBtn.addEventListener('click', async () => {
+  const filePath = await window.electronAPI.openFile()
+  filePathElement.innerText = filePath
+})
 
-/** 关键对象
- * app 程序生命周期
- * window
- * process
- * document
-*/
+window.electronAPI.onUpdateCounter((_event, value) => {
+    const oldValue = Number(counter.innerText)
+    const newValue = oldValue + value
+    counter.innerText = newValue
+})

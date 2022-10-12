@@ -1,37 +1,72 @@
 const {app, BrowserWindow, ipcMain} = require('electron')
+const {Menu, dialog} = require('electron')
+
 const path = require('path')
 
-const createWindow = () => {
-    const win = new BrowserWindow({
-      width: 800,
-      height: 600,
-      webPreferences: {
-        preload: path.join(__dirname, 'preload.js')
+function createWindow () {
+  const mainWindow = new BrowserWindow({
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js')
+    }
+  })
+  setupMenu(mainWindow)
+  setupDevTools(mainWindow)
+  mainWindow.loadFile('index.html')
+}
+
+const setupMenu = (window) => {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: app.name,
+      submenu: [
+      {
+        click: () => window.webContents.send('update-counter', 1),
+        label: 'Increment',
+      },
+      {
+        click: () => window.webContents.send('update-counter', -1),
+        label: 'Decrement',
       }
-    })
-    win.webContents.openDevTools()
+      ]
+    }
+  ])
+  Menu.setApplicationMenu(menu)
+}
 
+app.whenReady().then(() => {
 
-    win.loadFile('index.html')
-    // win.loadURL('https://baidu.com')
-  }
-
-  app.whenReady().then(() => {
-    createWindow()
-    ipcMain.on('set-title', handleSetTitle)
-
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createWindow()
-    })
+  registerIPCLister()
+  registerHandler()
+  createWindow()
+  app.on('activate', function () {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
-  app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+})
+
+app.on('window-all-closed', function () {
+  if (process.platform !== 'darwin') app.quit()
+})
+
+const registerHandler = () => {
+  ipcMain.handle('dialog:openFile', handleFileOpen)
+}
+
+const registerIPCLister = () => {
+  ipcMain.on('counter-value', (_event, value) => {
+    console.log(value) // 将打印到 Node 控制台
   })
+}
 
+const setupDevTools = (window) => {
+  window.webContents.openDevTools()
+}
 
-  function handleSetTitle (event, title) {
-    debugger
-    const webContents = event.sender
-    const win = BrowserWindow.fromWebContents(webContents)
-    win.setTitle(title)
+// private method
+async function handleFileOpen() {
+  const { canceled, filePaths } = await dialog.showOpenDialog()
+  if (canceled) {
+    return
+  } else {
+    return filePaths[0]
   }
+}
