@@ -1,3 +1,16 @@
+const { contextBridge } = require('electron')
+
+
+// 未开启上下文隔离（webcontent isolation)，暴露 API的方式
+// window.testAPI = {
+//   console.log("testAPI")
+// }
+
+// 开启上下文隔离（webcontent isolation)，暴露 API的方式
+contextBridge.exposeInMainWorld('myAPI', {
+  desktop: true,
+})
+
 window.addEventListener('DOMContentLoaded', () => {
   const replaceText = (selector, text) => {
     const element = document.getElementById(selector)
@@ -6,5 +19,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
   for (const type of ['chrome', 'node', 'electron']) {
     replaceText(`${type}-version`, process.versions[type])
+  }
+})
+
+
+// 注册 listener
+window.addEventListener('test', () => {
+  const testTarget = () => {
+    const element = document.getElementById("content")
+    element.style.backgroundColor = 'pink'
   }
 })
