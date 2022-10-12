@@ -1,17 +1,27 @@
-const {app, BrowserWindow, ipcMain} = require('electron')
+const {app, BrowserWindow, ipcMain, MessageChannelMain} = require('electron')
 const {Menu, dialog} = require('electron')
-
 const path = require('path')
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
     webPreferences: {
+      // contextIsolation: false,
       preload: path.join(__dirname, 'preload.js')
     }
   })
   setupMenu(mainWindow)
   setupDevTools(mainWindow)
   mainWindow.loadFile('index.html')
+
+  const secondaryWindow = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      // contextIsolation: false,
+      preload: 'preloadSecondary.js'
+    }
+  })
+
+  setupMsgChannel(mainWindow, secondaryWindow)
 }
 
 const setupMenu = (window) => {
@@ -57,6 +67,16 @@ const registerIPCLister = () => {
   })
 }
 
+const setupMsgChannel = (window1, window2) => {
+  const { port1, port2 } = new MessageChannelMain()
+  window1.once('ready-to-show', () => {
+    window1.webContents.postMessage('port', null, [port1])
+  })
+
+  window2.once('ready-to-show', () => {
+    window2.webContents.postMessage('port', null, [port2])
+  })
+}
 const setupDevTools = (window) => {
   window.webContents.openDevTools()
 }

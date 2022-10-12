@@ -22,3 +22,6 @@ window.electronAPI.onUpdateCounter((_event, value) => {
     const newValue = oldValue + value
     counter.innerText = newValue
 })
+
+// window.electronMessagePort.postmessage('ping')
+
